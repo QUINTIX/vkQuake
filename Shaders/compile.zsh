@@ -7,6 +7,14 @@ then
 	gcc bintoc.c -o bintoc
 fi
 
+echo sdk directory is "$VULKAN_SDK"
+
+if [[! -x $VULKAN_SDK/bin/glslangValidator]]
+then
+	echo unable to find glsl compiler
+	exit 1
+fi
+
 find . -type f -name "*.vert" | \
 	while read f; do $VULKAN_SDK/bin/glslangValidator -V ${f} -o "Compiled/${f%.*}.vspv"; done
 

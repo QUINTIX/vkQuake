@@ -15,7 +15,7 @@ jobs:
       run: brew install molten-vk vulkan-headers sdl2 libvorbis flac mad meson
     - name: compile shaders
       working-directory: ./Shaders
-      run: ./Compile.zsh
+      run: ./compile.zsh
     - name: Build vkQuake
       working-directory: ./Quake
       run: |
