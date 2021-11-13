@@ -12,17 +12,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Dependencies
-      run: brew install molten-vk vulkan-headers sdl2 libvorbis flac mad meson glslang
+      run: brew install molten-vk vulkan-headers sdl2 libvorbis flac mad glslang
     - name: compile shaders
       working-directory: ./Shaders
       run: ./compile.zsh
     - name: Build vkQuake
       working-directory: ./Quake
-      run: |
-        meson build
-        cd build
-        ninja
+      run: make
     - uses: actions/upload-artifact@v2
       with:
           name: vkQuake mac_archive
-          path: Quake/build/**
+          path: Quake/vkquake
