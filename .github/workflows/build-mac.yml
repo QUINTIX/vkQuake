@@ -1,9 +1,10 @@
 name: MacOS CI
 
-push:
-  branches: [ master, qtx-buildauto ]
-pull_request:
-  branches: [ master ]
+on:
+  push:
+    branches: [ master, qtx-buildauto ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   build:
@@ -22,6 +23,6 @@ jobs:
         cd build
         ninja
     - uses: actions/upload-artifact@v2
-    with:
-        name: vkQuake mac_archive
-        path: Quake/build/**
+      with:
+          name: vkQuake mac_archive
+          path: Quake/build/**
