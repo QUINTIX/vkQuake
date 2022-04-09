@@ -14,9 +14,10 @@ USE_CODEC_FLAC=0
 USE_CODEC_MP3=1
 USE_CODEC_VORBIS=1
 USE_CODEC_OPUS=0
-# either mikmod, or xmp
+# either xmp or mikmod (or modplug)
 USE_CODEC_MIKMOD=0
 USE_CODEC_XMP=0
+USE_CODEC_MODPLUG=0
 USE_CODEC_UMX=0
 
 # which library to use for mp3 decoding: mad or mpg123
@@ -47,7 +48,8 @@ STRIP ?= strip
 
 CPUFLAGS=
 DFLAGS ?=
-CFLAGS ?= -Wall -Wno-trigraphs -std=gnu99
+CFLAGS ?=
+CFLAGS += -Wall -Wno-trigraphs -Wno-unused-function -Werror -std=gnu11
 CFLAGS += $(CPUFLAGS)
 ifneq ($(DEBUG),0)
 DFLAGS += -D_DEBUG
@@ -55,7 +57,7 @@ CFLAGS += -g
 do_strip=
 else
 DFLAGS += -DNDEBUG
-CFLAGS += -O2
+CFLAGS += -O3
 CFLAGS += $(call check_gcc,-fweb,)
 CFLAGS += $(call check_gcc,-frename-registers,)
 cmd_strip=$(STRIP) $(1)
@@ -142,6 +144,10 @@ ifeq ($(USE_CODEC_XMP),1)
 CFLAGS+= -DUSE_CODEC_XMP
 CODECLIBS+= -lxmp
 endif
+ifeq ($(USE_CODEC_MODPLUG),1)
+CFLAGS+= -DUSE_CODEC_MODPLUG
+CODECLIBS+= -lmodplug
+endif
 ifeq ($(USE_CODEC_UMX),1)
 CFLAGS+= -DUSE_CODEC_UMX
 endif
@@ -175,8 +181,13 @@ DEFAULT_TARGET := vkquake
 
 %.o:	%.c
 	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $<
-%.o:	../Shaders/Compiled/%.c
+ifeq ($(DEBUG),0)
+%.o:	../Shaders/Compiled/Release/%.c
 	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $^
+else
+%.o:	../Shaders/Compiled/Debug/%.c
+	$(CC) $(DFLAGS) -c $(CFLAGS) $(SDL_CFLAGS) -o $@ $^
+endif
 
 # ----------------------------------------------------------------------------
 # objects
@@ -191,6 +202,7 @@ MUSIC_OBJS:= bgmusic.o \
 	$(mp3_obj).o \
 	snd_mp3tag.o \
 	snd_mikmod.o \
+	snd_modplug.o \
 	snd_xmp.o \
 	snd_umx.o
 COMOBJ_SND := snd_dma.o snd_mix.o snd_mem.o $(MUSIC_OBJS)
@@ -204,29 +216,30 @@ SYSOBJ_MAIN:= main_sdl.o
 SYSOBJ_RES :=
 
 SHADER_OBJS = \
-	alias_frag.o \
-	alias_alphatest_frag.o \
-	alias_vert.o \
-	basic_alphatest_frag.o \
-	screen_effects_8bit_comp.o \
-	screen_effects_8bit_scale_comp.o \
-	screen_effects_8bit_scale_sops_comp.o \
-	screen_effects_10bit_comp.o \
-	screen_effects_10bit_scale_comp.o \
-	screen_effects_10bit_scale_sops_comp.o \
-	cs_tex_warp_comp.o \
-	basic_frag.o \
-	basic_notex_frag.o \
-	basic_vert.o \
-	sky_layer_frag.o \
-	sky_layer_vert.o \
-	sky_box_frag.o \
-	postprocess_frag.o \
-	postprocess_vert.o \
-	world_frag.o \
-	world_vert.o \
-	showtris_frag.o \
-	showtris_vert.o
+	alias.frag.o \
+	alias_alphatest.frag.o \
+	alias.vert.o \
+	basic_alphatest.frag.o \
+	screen_effects_8bit.comp.o \
+	screen_effects_8bit_scale.comp.o \
+	screen_effects_8bit_scale_sops.comp.o \
+	screen_effects_10bit.comp.o \
+	screen_effects_10bit_scale.comp.o \
+	screen_effects_10bit_scale_sops.comp.o \
+	cs_tex_warp.comp.o \
+	basic.frag.o \
+	basic_notex.frag.o \
+	basic.vert.o \
+	sky_layer.frag.o \
+	sky_layer.vert.o \
+	sky_box.frag.o \
+	postprocess.frag.o \
+	postprocess.vert.o \
+	world.frag.o \
+	world.vert.o \
+	showtris.frag.o \
+	showtris.vert.o \
+	update_lightmap.comp.o
 
 GLOBJS = \
 	$(SHADER_OBJS) \
@@ -236,6 +249,7 @@ GLOBJS = \
 	gl_fog.o \
 	gl_rmisc.o \
 	r_part.o \
+	r_part_fte.o \
 	r_world.o \
 	gl_screen.o \
 	gl_sky.o \
